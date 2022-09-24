@@ -1,0 +1,127 @@
+apply plugin: 'java'
+apply plugin: 'signing'
+apply plugin: 'maven-publish'
+apply plugin: 'io.codearte.nexus-staging'
+apply plugin: "java-library"
+apply plugin: "de.marcphilipp.nexus-publish"
+apply plugin: 'io.codearte.nexus-staging'
+artifacts {
+    archives jar
+}
+task sourceJar(type: Jar) {
+    classifier "sources"
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier "javadoc"
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives jar
+    archives sourceJar
+    archives javadocJar
+}
+
+nexusStaging {
+    packageGroup = "io.github.nassimus26" //optional if packageGroup == project.getGroup()
+    stagingProfileId = sonatypeUsername //when not defined will be got from server using "packageGroup"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            customizePom(pom)
+            groupId "io.github.nassimus26"
+            version "0.1"
+            from components.java
+            artifact(sourceJar) {
+                classifier = 'sources'
+            }
+            artifact(javadocJar) {
+                classifier = 'javadoc'
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username sonatypeUsername
+                password sonatypePassword
+            }
+        }
+    }
+}
+signing {
+    sign configurations.archives
+    sign publishing.publications.mavenJava
+}
+
+
+model {
+    tasks.publish {
+        dependsOn(project.tasks.build)
+    }
+    tasks.install {
+        dependsOn(project.tasks.build)
+    }
+}
+
+def customizePom(pom) {
+    pom.withXml {
+        def root = asNode()
+
+        // eliminate test-scoped dependencies (no need in maven central POMs)
+        root.dependencies.removeAll { dep ->
+            dep.scope == "test"
+        }
+
+        // add all items necessary for maven central publication
+        root.children().last() + {
+            resolveStrategy = Closure.DELEGATE_FIRST
+            name 'Repo URL parser'
+            description "Hytrix Rest Client"
+            url 'https://github.com/nassimus26/hytrix-rest-client'
+            organization {
+                name 'Nassim MOUALEK'
+                url 'https://www.linkedin.com/in/nassim-moualek-8ab7231a/'
+            }
+            issueManagement {
+                system 'GitHub'
+                url 'https://github.com/nassimus26/hytrix-rest-client/issues'
+            }
+            licenses {
+                license {
+                    name 'MIT License'
+                    url 'https://opensource.org/licenses/MIT'
+                    distribution 'repo'
+                }
+            }
+            scm {
+                url 'https://github.com/nassimus26/hytrix-rest-client'
+                connection 'scm:git:git://github.com/nassimus26/hytrix-rest-client.git'
+                developerConnection 'scm:git:ssh://git@github.com/nassimus26/hytrix-rest-client.git'
+            }
+            developers {
+                developer {
+                    id 'nassimus'
+                    name 'Nassim MOUALEK'
+                    email 'nmoualek@gmail.com'
+                    timezone '+1'
+                }
+            }
+        }
+    }
+}
+nexusPublishing {
+    repositories {
+        nexus {
+            nexusUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            snapshotRepositoryUrl = uri("https://github.com/nassimus26/hytrix-rest-client")
+            username = sonatypeUsername
+            password = sonatypePassword
+        }
+    }
+}

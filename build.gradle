@@ -1,0 +1,58 @@
+plugins {
+  id "org.unbroken-dome.test-sets" version "3.0.1"
+  id 'io.codearte.nexus-staging' version "0.22.0" apply false
+  id "de.marcphilipp.nexus-publish" version "0.3.0"
+}
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'idea'
+apply plugin: 'org.unbroken-dome.test-sets'
+
+compileJava.dependsOn(processResources)
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile "org.projectlombok:lombok:${lombok_version}"
+
+  compile "com.squareup.okhttp3:logging-interceptor:${okhttp_version}"
+  compile "io.github.openfeign:feign-core:${openfeign_version}"
+  compile "io.github.openfeign:feign-hystrix:${openfeign_version}"
+  compile "io.github.openfeign:feign-okhttp:${openfeign_version}"
+  compile "io.github.openfeign:feign-jackson:${openfeign_version}"
+  compile "io.github.openfeign:feign-slf4j:${openfeign_version}"
+  compile "io.github.openfeign.form:feign-form:${openfeing_form_version}"
+  compile "io.github.openfeign.form:feign-form-spring:${openfeing_form_version}"
+  compile "org.springframework.boot:spring-boot-autoconfigure:${spring_boot_version}"
+  compile ("org.springframework:spring-web:5.3.2") {force=true}
+
+  implementation 'net.logstash.logback:logstash-logback-encoder:6.5'
+  testCompile("org.springframework.boot:spring-boot-starter-test:${spring_boot_version}") {
+    exclude group: 'com.vaadin.external.google', module: 'android-json'
+    exclude group: 'junit', module: 'junit'
+  }
+  compileOnly "org.springframework.boot:spring-boot-configuration-processor:${spring_boot_version}"
+  annotationProcessor "org.projectlombok:lombok:${lombok_version}"
+  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:${spring_boot_version}"
+  testAnnotationProcessor "org.projectlombok:lombok:${lombok_version}"
+  testCompile "org.springframework.boot:spring-boot-starter:${spring_boot_version}"
+  testCompile "org.springframework.boot:spring-boot-starter-web:${spring_boot_version}"
+  testCompile "org.mockito:mockito-core:3.6.28"
+  testCompile "org.assertj:assertj-core:3.18.1"
+  testCompile "org.hamcrest:hamcrest-library:2.2"
+  testCompile "org.junit.jupiter:junit-jupiter-api:5.3.2"
+  testRuntime "org.junit.jupiter:junit-jupiter-engine:5.3.2"
+  testCompile "com.google.guava:guava-testlib:21.0"
+}
+
+testSets {
+  itest
+}
+
+tasks.withType(Test) {
+  useJUnitPlatform()
+}
+
+apply from :"publish.gradle"
