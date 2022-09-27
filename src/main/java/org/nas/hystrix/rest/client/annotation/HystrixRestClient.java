@@ -101,8 +101,15 @@ public @interface HystrixRestClient {
      *
      * @return Class Fallback
      */
-    Class<?> fallback() default void.class;
+    Class<?> fallbackClass() default void.class;
 
+    /**
+     * Fallback Bean name. If left void, the library will automatically pick a class with the name of the client suffixed by
+     * {@code Fallback} ({@code XxxClientFallback} for {@code XxxClient}), if it exists.
+     *
+     * @return Class Fallback
+     */
+    String fallback() default "";
     /**
      * This property indicates the max number of concurrent requests and fallback when the semaphore strategy is used.
      *

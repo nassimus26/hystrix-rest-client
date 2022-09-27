@@ -8,7 +8,7 @@ import org.nas.hystrix.rest.client.service.fallback.TestClientWithTimeoutService
 /**
  * Rest client for testing timeouts.
  */
-@HystrixRestClient(name = "withTimeout", fallback = TestClientWithTimeoutServiceFallback.class, connectTimeoutMilliseconds = 5000,
+@HystrixRestClient(name = "withTimeout", fallbackClass = TestClientWithTimeoutServiceFallback.class, connectTimeoutMilliseconds = 5000,
         readTimeoutMilliseconds = 1, hystrixTimeoutMilliseconds = 5000)
 public interface TestClientWithTimeoutService {
 

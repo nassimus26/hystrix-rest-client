@@ -5,6 +5,19 @@ apply plugin: 'io.codearte.nexus-staging'
 apply plugin: "java-library"
 apply plugin: "de.marcphilipp.nexus-publish"
 apply plugin: 'io.codearte.nexus-staging'
+
+group = "io.github.nassimus26"
+archivesBaseName = "hystrix-rest-client"
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.9.0"
+    }
+}
+
 artifacts {
     archives jar
 }
@@ -34,7 +47,7 @@ publishing {
         mavenJava(MavenPublication) {
             customizePom(pom)
             groupId "io.github.nassimus26"
-            version "0.1"
+            version "1.0.1"
             from components.java
             artifact(sourceJar) {
                 classifier = 'sources'

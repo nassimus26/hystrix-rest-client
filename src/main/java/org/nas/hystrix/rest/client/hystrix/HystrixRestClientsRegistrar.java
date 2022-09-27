@@ -51,7 +51,7 @@ import static org.springframework.util.StringUtils.hasText;
 public final class HystrixRestClientsRegistrar implements ImportBeanDefinitionRegistrar, ResourceLoaderAware, BeanClassLoaderAware {
 
     private static final String HTTP = "http://";
-    private static final String FALLBACK = "fallback";
+    private static final String FALLBACK = "fallbackClass";
     private static final String PROPERTY_NAME_CUSTOM_DECODER = "customDecoder";
     private static final String DEFAULT_PROPERTY_PREFIX = "hystrix-rest-client.";
     private ResourceLoader resourceLoader;
@@ -145,16 +145,19 @@ public final class HystrixRestClientsRegistrar implements ImportBeanDefinitionRe
         definition.addPropertyValue("feignEncoder", attributes.get("encoder"));
         definition.addPropertyValue("feignDecoder", attributes.get("decoder"));
         definition.addPropertyValue(PROPERTY_NAME_CUSTOM_DECODER, attributes.get(PROPERTY_NAME_CUSTOM_DECODER));
-
         definition.setAutowireMode(AUTOWIRE_BY_TYPE);
-        Class<?> clazzFallback = generateClass(className, attributes);
-
-        try {
-            if (clazzFallback != null) {
-                definition.addPropertyValue(FALLBACK, clazzFallback.getDeclaredConstructor().newInstance());
+        String fallbackBeanName = (String) attributes.get("fallback");
+        if (!fallbackBeanName.isEmpty())
+            definition.addPropertyReference("fallback", fallbackBeanName);
+        else {
+            Class<?> clazzFallback = getFallBackClass(className, attributes);
+            try {
+                if (clazzFallback != null) {
+                    definition.addPropertyValue(FALLBACK, clazzFallback.getDeclaredConstructor().newInstance());
+                }
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+                throw new BeanInitializationException("Cannot register feign client", e);
             }
-        } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            throw new BeanInitializationException("Cannot register feign client", e);
         }
         try {
             Class<?> errorDecoderClass = (Class) attributes.get("errorDecoder");
@@ -186,7 +189,7 @@ public final class HystrixRestClientsRegistrar implements ImportBeanDefinitionRe
      * @return generated class.
      */
     @SuppressWarnings("squid:S1166")
-    private Class<?> generateClass(String className, Map<String, Object> attributes) {
+    private Class<?> getFallBackClass(String className, Map<String, Object> attributes) {
         Class<?> clazzFallback = null;
 
         try {
